@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Berra's Daily Menu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=4">
+</head>
+<body>
+
+  <!-- Auth Overlay -->
+  <div id="authOverlay" class="modal-overlay" style="z-index: 2000;">
+    <div class="modal-content" style="text-align: center; padding: 40px; max-width: 400px;">
+      <h2 style="margin-bottom: 20px; color: var(--text-primary);">Berra's Diet Planner</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 30px;">Sign in securely to sync your data to the cloud.</p>
+      <button id="loginBtn" class="primary-btn" style="font-size: 1.1rem; padding: 12px 24px; width: 100%;">
+        Sign in with Google
+      </button>
+      <p id="authErrorMsg" style="color: #ef4444; font-size: 0.85rem; margin-top: 16px; display: none;"></p>
+    </div>
+  </div>
+
+  <div class="app-container" id="mainAppContainer" style="display: none;">
+    <header class="main-header">
+      <div class="header-content">
+        <h1>Berra's Daily Menu</h1>
+        <div style="display:flex; align-items:center; gap: 12px; margin-bottom: 8px;">
+          <p class="date-display" id="dateDisplay">Loading date...</p>
+          <button id="logoutBtn" class="secondary-btn small-btn" style="margin:0; padding: 2px 8px; font-size:0.75rem; color:#ef4444; border-color:#ef4444;">Sign Out</button>
+        </div>
+        <button id="viewHistoryBtn" class="secondary-btn small-btn mt-2">📅 View History</button>
+      </div>
+      
+      <div class="header-stats">
+        <div class="stat-box">
+          <p class="stat-title">Daily Calories</p>
+          <p class="stat-value" id="totalCaloriesDisplay">0 <span class="unit">kcal</span></p>
+        </div>
+        <div class="water-tracker">
+          <p class="tracker-title">Daily Hydration</p>
+          <div class="glass-container" id="waterContainer">
+            <!-- Glasses rendered by JS -->
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="meals-grid">
+      <!-- Breakfast -->
+      <section class="meal-card" data-meal="breakfast">
+        <div class="meal-header">
+          <h2>Breakfast</h2>
+          <span class="meal-time">Morning Fuel</span>
+        </div>
+        <ul class="meal-items" id="breakfast-items"></ul>
+        
+        <form class="custom-add-form" data-meal="breakfast">
+          <input type="text" class="input-name" placeholder="Add food..." required>
+          <input type="number" class="input-cal" placeholder="kcal" min="0" required>
+          <button type="submit" class="add-btn">ADD</button>
+        </form>
+
+        <div class="suggestions" id="breakfast-suggestions">
+          <button type="button" class="suggestion-chip" data-item="Avocado Bagel 🥯" data-cal="350">+ Avocado Bagel</button>
+          <button type="button" class="suggestion-chip" data-item="Fresh Berries 🍓" data-cal="60">+ Fresh Berries</button>
+          <button type="button" class="suggestion-chip" data-item="Black Coffee ☕" data-cal="5">+ Black Coffee</button>
+        </div>
+      </section>
+
+      <!-- Lunch -->
+      <section class="meal-card" data-meal="lunch">
+        <div class="meal-header">
+          <h2>Lunch</h2>
+          <span class="meal-time">Midday Energy</span>
+        </div>
+        <ul class="meal-items" id="lunch-items"></ul>
+        
+        <form class="custom-add-form" data-meal="lunch">
+          <input type="text" class="input-name" placeholder="Add food..." required>
+          <input type="number" class="input-cal" placeholder="kcal" min="0" required>
+          <button type="submit" class="add-btn">ADD</button>
+        </form>
+
+        <div class="suggestions" id="lunch-suggestions">
+          <button type="button" class="suggestion-chip" data-item="Green Salad 🥗" data-cal="150">+ Green Salad</button>
+          <button type="button" class="suggestion-chip" data-item="Quinoa Bowl 🍲" data-cal="400">+ Quinoa Bowl</button>
+          <button type="button" class="suggestion-chip" data-item="Smoked Salmon 🍣" data-cal="200">+ Smoked Salmon</button>
+        </div>
+      </section>
+
+      <!-- Snacks -->
+      <section class="meal-card" data-meal="snacks">
+        <div class="meal-header">
+          <h2>Snacks</h2>
+          <span class="meal-time">Afternoon Pick-me-up</span>
+        </div>
+        <ul class="meal-items" id="snacks-items"></ul>
+        
+        <form class="custom-add-form" data-meal="snacks">
+          <input type="text" class="input-name" placeholder="Add food..." required>
+          <input type="number" class="input-cal" placeholder="kcal" min="0" required>
+          <button type="submit" class="add-btn">ADD</button>
+        </form>
+
+        <div class="suggestions" id="snacks-suggestions">
+          <button type="button" class="suggestion-chip" data-item="Dark Chocolate 🍫" data-cal="170">+ Dark Chocolate</button>
+          <button type="button" class="suggestion-chip" data-item="Mixed Nuts 🥜" data-cal="200">+ Mixed Nuts</button>
+          <button type="button" class="suggestion-chip" data-item="Apple Slices 🍏" data-cal="95">+ Apple Slices</button>
+        </div>
+      </section>
+
+      <!-- Dinner -->
+      <section class="meal-card" data-meal="dinner">
+        <div class="meal-header">
+          <h2>Dinner</h2>
+          <span class="meal-time">Evening Wind Down</span>
+        </div>
+        <ul class="meal-items" id="dinner-items"></ul>
+        
+        <form class="custom-add-form" data-meal="dinner">
+          <input type="text" class="input-name" placeholder="Add food..." required>
+          <input type="number" class="input-cal" placeholder="kcal" min="0" required>
+          <button type="submit" class="add-btn">ADD</button>
+        </form>
+
+        <div class="suggestions" id="dinner-suggestions">
+          <button type="button" class="suggestion-chip" data-item="Light Soup 🥣" data-cal="120">+ Light Soup</button>
+          <button type="button" class="suggestion-chip" data-item="Steamed Veggies 🥦" data-cal="80">+ Steamed Veggies</button>
+          <button type="button" class="suggestion-chip" data-item="Grilled Chicken 🍗" data-cal="250">+ Grilled Chicken</button>
+        </div>
+      </section>
+    </main>
+
+    <section class="daily-summary">
+      <div class="summary-header">
+        <h2>Daily Summary</h2>
+        <span class="summary-icon">✨</span>
+      </div>
+      <div class="summary-content">
+        <p id="summaryMessage">Ready for a productive day, Berra!</p>
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      <button id="restartBtn" class="primary-btn">Finish Day & Restart</button>
+      <p class="footer-note">Saves today's record securely to the cloud.</p>
+    </footer>
+  </div>
+  
+  <!-- History Modal -->
+  <div id="historyModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Diet History</h2>
+        <button id="closeModalBtn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Calendar View -->
+        <div id="calendarContainer">
+          <div class="calendar-controls">
+            <button id="prevMonthBtn" class="calendar-nav-btn">&lt;</button>
+            <span id="calendarMonthYear" class="calendar-month-year">...</span>
+            <button id="nextMonthBtn" class="calendar-nav-btn">&gt;</button>
+          </div>
+          <div class="calendar-grid">
+            <div class="calendar-day-header">Sun</div>
+            <div class="calendar-day-header">Mon</div>
+            <div class="calendar-day-header">Tue</div>
+            <div class="calendar-day-header">Wed</div>
+            <div class="calendar-day-header">Thu</div>
+            <div class="calendar-day-header">Fri</div>
+            <div class="calendar-day-header">Sat</div>
+          </div>
+          <div id="calendarGrid" class="calendar-grid"></div>
+        </div>
+
+        <!-- Detail View -->
+        <div id="historyDetailContainer" class="hidden">
+          <div class="history-detail-header">
+            <button id="backToCalendarBtn" class="back-btn">&#8592;</button>
+            <span id="detailDateDisplay" class="history-detail-date">Date</span>
+          </div>
+          <div id="detailContent" class="history-detail-content">
+            <!-- Details generated by JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app_v3.js?v=4"></script>
+</body>
+</html>
