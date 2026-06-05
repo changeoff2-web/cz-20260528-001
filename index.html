@@ -28,7 +28,11 @@
       <div class="header-content">
         <h1>Berra's Daily Menu</h1>
         <div style="display:flex; align-items:center; gap: 12px; margin-bottom: 8px;">
-          <p class="date-display" id="dateDisplay">Loading date...</p>
+          <div style="display:flex; align-items:center; gap: 8px;">
+            <button id="prevDayBtn" class="secondary-btn small-btn" style="padding: 2px 8px;">&lt;</button>
+            <p class="date-display" id="dateDisplay" style="margin: 0; min-width: 140px; text-align: center;">Loading date...</p>
+            <button id="nextDayBtn" class="secondary-btn small-btn" style="padding: 2px 8px;">&gt;</button>
+          </div>
           <button id="logoutBtn" class="secondary-btn small-btn" style="margin:0; padding: 2px 8px; font-size:0.75rem; color:#ef4444; border-color:#ef4444;">Sign Out</button>
         </div>
         <button id="viewHistoryBtn" class="secondary-btn small-btn mt-2">📅 View History</button>
@@ -193,6 +197,6 @@
     </div>
   </div>
 
-  <script type="module" src="app_v3.js?v=6"></script>
+  <script type="module" src="app_v3.js?v=7"></script>
 </body>
 </html>

@@ -37,6 +37,8 @@ const getEmptyDay = () => ({
 
 let appData = { current: getEmptyDay(), history: [] };
 let calendarViewDate = new Date();
+let activeDateObj = new Date();
+let activeRecord = null;
 
 // DOM Elements
 let dateDisplay, waterContainer, totalCaloriesDisplay, restartBtn, viewHistoryBtn;
@@ -44,6 +46,7 @@ let historyModal, closeModalBtn, summaryMessage;
 let calendarContainer, historyDetailContainer, calendarGrid, calendarMonthYear;
 let prevMonthBtn, nextMonthBtn, backToCalendarBtn, detailDateDisplay, detailContent;
 let authOverlay, mainAppContainer, loginBtn, logoutBtn, authErrorMsg;
+let prevDayBtn, nextDayBtn;
 
 document.addEventListener('DOMContentLoaded', boot);
 
@@ -72,6 +75,8 @@ function boot() {
   loginBtn = document.getElementById('loginBtn');
   logoutBtn = document.getElementById('logoutBtn');
   authErrorMsg = document.getElementById('authErrorMsg');
+  prevDayBtn = document.getElementById('prevDayBtn');
+  nextDayBtn = document.getElementById('nextDayBtn');
 
   loginBtn.addEventListener('click', handleLogin);
   logoutBtn.addEventListener('click', handleLogout);
@@ -160,6 +165,32 @@ async function saveCloudData() {
 
 function initApp() {
   checkNewDay();
+  activeDateObj = new Date();
+  setActiveDate();
+}
+
+function changeDay(offset) {
+  activeDateObj.setDate(activeDateObj.getDate() + offset);
+  setActiveDate();
+}
+
+function setActiveDate() {
+  const targetDateStr = activeDateObj.toDateString();
+  const todayStr = new Date().toDateString();
+  
+  if (targetDateStr === todayStr) {
+    if (appData.current.date !== todayStr) checkNewDay();
+    activeRecord = appData.current;
+  } else {
+    let hist = appData.history.find(h => h.date === targetDateStr);
+    if (!hist) {
+      hist = { date: targetDateStr, water: 0, meals: { breakfast: [], lunch: [], snacks: [], dinner: [] }, totalCal: 0 };
+      appData.history.push(hist);
+      appData.history.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+    activeRecord = hist;
+  }
+  
   renderDate();
   renderWaterTracker();
   MEALS.forEach(meal => renderMealItems(meal));
@@ -199,7 +230,7 @@ function saveCurrentToHistory() {
 function renderDate() {
   if(!dateDisplay) return;
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  dateDisplay.textContent = new Date().toLocaleDateString('en-US', options);
+  dateDisplay.textContent = activeDateObj.toLocaleDateString('en-US', options);
 }
 
 function renderWaterTracker() {
@@ -208,7 +239,7 @@ function renderWaterTracker() {
   for (let i = 0; i < TOTAL_GLASSES; i++) {
     const glass = document.createElement('div');
     glass.classList.add('glass');
-    if (i < appData.current.water) {
+    if (i < activeRecord.water) {
       glass.classList.add('filled');
     }
     glass.addEventListener('click', () => toggleWater(i));
@@ -217,10 +248,10 @@ function renderWaterTracker() {
 }
 
 function toggleWater(index) {
-  if (index === appData.current.water - 1) {
-    appData.current.water--; 
+  if (index === activeRecord.water - 1) {
+    activeRecord.water--; 
   } else {
-    appData.current.water = index + 1;
+    activeRecord.water = index + 1;
   }
   saveCloudData();
   renderWaterTracker();
@@ -228,8 +259,11 @@ function toggleWater(index) {
 
 function updateTotalCalories() {
   const total = MEALS.reduce((sum, meal) => {
-    return sum + (appData.current.meals[meal] ? appData.current.meals[meal].reduce((mSum, item) => mSum + item.cal, 0) : 0);
+    return sum + (activeRecord.meals[meal] ? activeRecord.meals[meal].reduce((mSum, item) => mSum + item.cal, 0) : 0);
   }, 0);
+  if (activeRecord !== appData.current) {
+    activeRecord.totalCal = total;
+  }
   if(totalCaloriesDisplay) {
     totalCaloriesDisplay.innerHTML = `${total} <span class="unit">kcal</span>`;
   }
@@ -240,13 +274,13 @@ function updateSummary(totalCal) {
   if (!summaryMessage) return;
   
   let message = "";
-  if (totalCal === 0 && appData.current.water === 0) {
+  if (totalCal === 0 && activeRecord.water === 0) {
     message = "Ready for a productive day, Berra! ✨";
   } else {
     let waterMsg = "";
-    if (appData.current.water === 0) waterMsg = "Don't forget to drink water! 💧";
-    else if (appData.current.water < 4) waterMsg = "Keep hydrating! 💧";
-    else if (appData.current.water < 8) waterMsg = "You're doing great with water! 💧";
+    if (activeRecord.water === 0) waterMsg = "Don't forget to drink water! 💧";
+    else if (activeRecord.water < 4) waterMsg = "Keep hydrating! 💧";
+    else if (activeRecord.water < 8) waterMsg = "You're doing great with water! 💧";
     else waterMsg = "Hydration goal reached! 🌊";
     
     let calMsg = "";
@@ -258,9 +292,9 @@ function updateSummary(totalCal) {
     let foodsListHtml = '<div style="margin-top: 16px; text-align: left; font-size: 0.95rem; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-md); box-shadow: 0 2px 10px rgba(0,0,0,0.02);">';
     let hasFood = false;
     MEALS.forEach(meal => {
-      if (appData.current.meals[meal] && appData.current.meals[meal].length > 0) {
+      if (activeRecord.meals[meal] && activeRecord.meals[meal].length > 0) {
         hasFood = true;
-        const items = appData.current.meals[meal].map(i => `${i.name} (${i.cal} kcal)`).join('，');
+        const items = activeRecord.meals[meal].map(i => `${i.name} (${i.cal} kcal)`).join('，');
         foodsListHtml += `<p style="margin-bottom: 8px; border-bottom: 1px dashed var(--border-color); padding-bottom: 4px;"><strong>${mealNames[meal]}:</strong> ${items}</p>`;
       }
     });
@@ -279,9 +313,9 @@ function renderMealItems(meal) {
   if(!ul) return;
   ul.innerHTML = '';
   
-  if(!appData.current.meals[meal]) return;
+  if(!activeRecord.meals[meal]) return;
 
-  appData.current.meals[meal].forEach((item, index) => {
+  activeRecord.meals[meal].forEach((item, index) => {
     const li = document.createElement('li');
     li.classList.add('meal-item');
     
@@ -311,15 +345,15 @@ function renderMealItems(meal) {
 
 function addMealItem(meal, name, cal) {
   if(!name || name.trim() === '') return;
-  if(!appData.current.meals[meal]) appData.current.meals[meal] = [];
-  appData.current.meals[meal].push({ name: name.trim(), cal: parseInt(cal) || 0 });
+  if(!activeRecord.meals[meal]) activeRecord.meals[meal] = [];
+  activeRecord.meals[meal].push({ name: name.trim(), cal: parseInt(cal) || 0 });
   saveCloudData();
   renderMealItems(meal);
 }
 
 function removeMealItem(meal, index) {
-  if(appData.current.meals[meal]) {
-    appData.current.meals[meal].splice(index, 1);
+  if(activeRecord.meals[meal]) {
+    activeRecord.meals[meal].splice(index, 1);
     saveCloudData();
     renderMealItems(meal);
   }
@@ -465,6 +499,9 @@ function setupEventListeners() {
       historyModal.classList.add('hidden');
     });
   }
+
+  if(prevDayBtn) prevDayBtn.addEventListener('click', () => changeDay(-1));
+  if(nextDayBtn) nextDayBtn.addEventListener('click', () => changeDay(1));
 
   if(prevMonthBtn) {
     prevMonthBtn.addEventListener('click', () => {
